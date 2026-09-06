@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vector Vision / Local</title>
+  <style>
+    :root { color-scheme: dark; --bg: #050505; --surface: #0b0b0c; --surface-2: #101113; --line: #242528; --text: #f4f4f5; --muted: #8b8d94; --lime: #b8f542; --cyan: #62d9ff; --red: #ff716e; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--text); background: var(--bg); font: 14px/1.45 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .28; background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 56px 56px; mask-image: linear-gradient(to bottom, black, transparent 68%); }
+    body::after { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .035; background: repeating-linear-gradient(0deg, #fff 0 1px, transparent 1px 4px); }
+    main { position: relative; width: min(1500px, calc(100% - 40px)); margin: 0 auto; padding: 30px 0 80px; }
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 22px; }
+    .brand { display: flex; align-items: center; gap: 12px; } .mark { width: 13px; height: 13px; background: var(--lime); box-shadow: 0 0 24px var(--lime); }
+    h1, h2, p { margin: 0; } h1 { font-size: 20px; font-weight: 600; letter-spacing: 0; } h2 { font-size: 13px; font-weight: 600; }
+    .eyebrow { color: var(--muted); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; } .status { color: var(--lime); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .status::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; animation: pulse 1.8s ease-in-out infinite; }
+    .warning { color: var(--red); }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); background: var(--surface); margin-bottom: 16px; }
+    .stat { padding: 15px 17px; border-right: 1px solid var(--line); } .stat:last-child { border-right: 0; } .stat-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; } .stat-value { margin-top: 3px; font-size: 22px; font-variant-numeric: tabular-nums; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, .72fr); gap: 16px; }
+    .panel { background: rgba(11, 11, 12, .92); border: 1px solid var(--line); overflow: hidden; } .panel-head { display: flex; justify-content: space-between; align-items: center; min-height: 50px; padding: 0 16px; border-bottom: 1px solid var(--line); } .panel-head span { color: var(--muted); font-size: 11px; }
+    .video-wrap { position: relative; background: #000; min-height: 420px; display: grid; place-items: center; } #video { display: block; width: 100%; height: auto; }
+    .corner { position: absolute; inset: 14px; border: 1px solid rgba(184,245,66,.25); pointer-events: none; } .corner::after { content: "LIVE FEED / CAM 0"; position: absolute; top: -9px; left: 14px; padding: 0 8px; color: var(--lime); background: #000; font: 10px monospace; }
+    .legend { position: absolute; right: 24px; bottom: 24px; display: flex; gap: 13px; padding: 8px 10px; color: #cbd0d2; background: rgba(5, 5, 5, .82); border: 1px solid #303235; font: 10px monospace; text-transform: uppercase; } .legend i { display: inline-block; width: 20px; height: 2px; margin-right: 5px; vertical-align: middle; } .legend .link { background: #ffbe37; } .legend .box { background: var(--lime); }
+    .stack { display: grid; gap: 16px; align-content: start; } .content { padding: 14px 16px; } .empty { color: var(--muted); padding: 10px 0; }
+    table { width: 100%; border-collapse: collapse; } th, td { text-align: left; padding: 10px 6px; border-bottom: 1px solid var(--line); } tr:last-child td { border-bottom: 0; } th { color: var(--muted); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .07em; } td:last-child { color: var(--lime); font-variant-numeric: tabular-nums; }
+    .pair { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); } .pair:last-child { border-bottom: 0; } .pair-name { color: var(--muted); } .pair-value { color: var(--cyan); font-size: 18px; font-variant-numeric: tabular-nums; } .muted { color: var(--muted); } .link-dot { display: inline-block; width: 6px; height: 6px; margin-right: 7px; border-radius: 50%; background: #ffbe37; box-shadow: 0 0 8px #ffbe37; }
+    .cat-layer { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .cat { position: absolute; display: grid; gap: 5px; color: rgba(184,245,66,.3); font: 42px/1 monospace; text-align: center; filter: drop-shadow(0 0 16px rgba(184,245,66,.24)); animation: drift 18s linear infinite; }
+    .cat small { color: rgba(98,217,255,.35); font-size: 9px; font-weight: 700; letter-spacing: .14em; }
+    .cat-a { top: 17%; left: -110px; animation-delay: -2s; } .cat-b { top: 68%; left: -150px; font-size: 34px; animation-delay: -9s; } .cat-c { top: 39%; left: -130px; font-size: 28px; animation-delay: -15s; }
+    .meme-card { position: absolute; display: grid; grid-template-columns: auto 1fr; gap: 9px; align-items: center; width: 190px; padding: 10px; border: 1px solid rgba(255,255,255,.16); background: rgba(12,12,13,.82); box-shadow: 0 12px 35px rgba(0,0,0,.3); transform: rotate(-4deg); animation: card-float 7s ease-in-out infinite; }
+    .meme-card .face { display: grid; place-items: center; width: 52px; height: 52px; background: var(--card-bg); font-size: 35px; filter: saturate(1.2); }
+    .meme-card strong { display: block; color: var(--card-color); font: 700 10px monospace; letter-spacing: .08em; } .meme-card span { display: block; margin-top: 4px; color: #b5b7bc; font-size: 10px; }
+    .meme-one { top: 12%; right: 3%; --card-bg: #e8e3d5; --card-color: #f4d36c; animation-delay: -1s; } .meme-two { top: 30%; left: 2%; --card-bg: #d7732e; --card-color: #ff9c45; transform: rotate(5deg); animation-delay: -3s; } .meme-three { top: 55%; right: 4%; --card-bg: #8f786f; --card-color: #d4a7ff; transform: rotate(3deg); animation-delay: -5s; } .meme-four { top: 73%; left: 4%; --card-bg: #ddd9cd; --card-color: #ff91d0; transform: rotate(-6deg); animation-delay: -2s; } .meme-five { top: 84%; right: 30%; --card-bg: #18ef22; --card-color: #b8f542; transform: rotate(2deg); animation-delay: -6s; }
+    .meme-badge { position: fixed; right: 24px; bottom: 24px; z-index: 2; display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; padding: 13px 15px; border: 1px solid rgba(184,245,66,.5); background: rgba(5,5,5,.88); box-shadow: 0 0 28px rgba(184,245,66,.12), inset 0 0 20px rgba(184,245,66,.04); transform: rotate(-2deg); animation: badge-bob 3.8s ease-in-out infinite; }
+    .meme-face { font-size: 38px; line-height: 1; animation: face-pop 2.2s ease-in-out infinite; } .meme-copy { display: grid; gap: 2px; } .meme-copy strong { color: var(--lime); font: 700 12px monospace; letter-spacing: .16em; } .meme-copy span { color: var(--cyan); font: 9px monospace; letter-spacing: .08em; }
+    .meme-marquee { position: fixed; right: 0; bottom: 0; left: 0; z-index: 1; overflow: hidden; border-top: 1px solid rgba(184,245,66,.25); border-bottom: 1px solid rgba(184,245,66,.16); background: rgba(184,245,66,.07); color: rgba(184,245,66,.52); font: 10px monospace; letter-spacing: .2em; white-space: nowrap; }
+    .meme-marquee span { display: inline-block; padding: 8px 0; animation: marquee 26s linear infinite; }
+    .cat-agent { position: relative; z-index: 3; display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 14px; min-height: 172px; padding: 18px; border: 1px solid rgba(184,245,66,.52); background: linear-gradient(135deg, rgba(23,31,17,.98), rgba(9,12,8,.96)); box-shadow: 0 0 32px rgba(184,245,66,.14), inset 0 0 35px rgba(184,245,66,.04); overflow: hidden; pointer-events: auto; }
+    .cat-agent::before { content: "CAT COPILOT // ONLINE"; position: absolute; top: 0; right: 0; left: 0; padding: 6px 12px; border-bottom: 1px solid rgba(184,245,66,.22); color: var(--lime); font: 10px monospace; letter-spacing: .14em; }
+    .cat-avatar { position: relative; display: grid; place-items: center; width: 92px; height: 92px; margin-top: 12px; border: 2px solid var(--lime); border-radius: 28px 28px 28px 8px; background: #171b13; box-shadow: 0 0 25px rgba(184,245,66,.25); font-size: 58px; animation: agent-breathe 2.8s ease-in-out infinite; }
+    .agent-wave { position: absolute; right: -8px; bottom: -8px; width: 30px; height: 30px; border: 2px solid var(--cyan); border-radius: 50%; animation: wave-ring 1.8s ease-out infinite; }
+    .cat-bubble { position: relative; margin-top: 12px; padding: 17px 16px; border: 1px solid #516734; border-radius: 10px 10px 3px 10px; background: rgba(9,12,8,.96); box-shadow: 0 8px 26px rgba(0,0,0,.35); color: #eaf6d2; font-size: 15px; font-weight: 600; }
+    .cat-bubble::after { content: ""; position: absolute; right: -8px; bottom: 10px; width: 14px; height: 14px; border-top: 1px solid #39432a; border-right: 1px solid #39432a; background: #090c08; transform: rotate(45deg); }
+    .cat-name { display: block; margin-bottom: 4px; color: var(--lime); font: 700 10px monospace; letter-spacing: .12em; text-transform: uppercase; }
+    .cat-voice { position: absolute; right: 12px; top: 5px; z-index: 1; pointer-events: auto; border: 1px solid var(--line); background: #101113; color: var(--muted); padding: 4px 8px; font: 10px monospace; cursor: pointer; }
+    .cat-voice.active { border-color: var(--lime); color: var(--lime); }
+    @keyframes drift { from { transform: translateX(0) rotate(-6deg); } 50% { transform: translateX(54vw) translateY(-24px) rotate(7deg); } to { transform: translateX(115vw) translateY(8px) rotate(-4deg); } }
+    @keyframes marquee { to { transform: translateX(-50%); } } @keyframes badge-bob { 50% { transform: rotate(2deg) translateY(-8px); } } @keyframes face-pop { 50% { transform: scale(1.18) rotate(8deg); } }
+    @keyframes card-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -12px; } }
+    @keyframes agent-breathe { 50% { transform: translateY(-6px) rotate(3deg); box-shadow: 0 0 35px rgba(184,245,66,.42); } } @keyframes wave-ring { 0% { transform: scale(.65); opacity: .8; } 100% { transform: scale(1.5); opacity: 0; } }
+    main { z-index: 1; }
+    @keyframes pulse { 50% { opacity: .35; transform: scale(.7); } }
+    @media (max-width: 850px) { main { width: min(100% - 24px, 620px); padding-top: 18px; } header { align-items: flex-start; gap: 14px; flex-direction: column; } .stats { grid-template-columns: repeat(2, 1fr); } .stat:nth-child(2) { border-right: 0; } .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); } .layout { grid-template-columns: 1fr; } .video-wrap { min-height: 220px; } .meme-badge { right: 12px; bottom: 38px; } .cat-agent { grid-template-columns: 76px minmax(0, 1fr); min-height: 145px; padding: 14px; } .cat-avatar { width: 72px; height: 72px; font-size: 44px; } .cat-bubble { font-size: 13px; } }
+  </style>
+</head>
+<body>
+<div class="cat-layer" aria-hidden="true">
+  <div class="cat cat-a">🐈<small>MEOW.EXE</small></div>
+  <div class="cat cat-b">😼<small>VISION MAXXING</small></div>
+  <div class="cat cat-c">🐱<small>NYA NYA</small></div>
+  <div class="meme-card meme-one"><div class="face">😏</div><div><strong>SMUG CAT</strong><span>zero thoughts / maximum aura</span></div></div>
+  <div class="meme-card meme-two"><div class="face">😳</div><div><strong>ORANGE ALERT</strong><span>the object has been perceived</span></div></div>
+  <div class="meme-card meme-three"><div class="face">🤪</div><div><strong>CHAOS MODE</strong><span>blanket.exe has stopped</span></div></div>
+  <div class="meme-card meme-four"><div class="face">🙏</div><div><strong>NO SCHOOL</strong><span>please respect the protocol</span></div></div>
+  <div class="meme-card meme-five"><div class="face">🐈</div><div><strong>GREEN SCREEN</strong><span>cat asset loading...</span></div></div>
+</div>
+<div class="meme-badge" aria-hidden="true"><div class="meme-face">😼</div><div class="meme-copy"><strong>BRAINROT SIGNAL</strong><span>MEOW PROTOCOL // ACTIVE</span></div></div>
+<div class="meme-marquee" aria-hidden="true"><span>🐈 MEOW MEOW // VISION MAXXING // CATCH THE OBJECT // NYA NYA // BRAINROT MODE ACTIVE // 🐈 MEOW MEOW // VISION MAXXING // CATCH THE OBJECT // NYA NYA // BRAINROT MODE ACTIVE //</span></div>
+<main>
+  <header>
+    <div class="brand"><span class="mark"></span><div><p class="eyebrow">Local vehicle vision</p><h1>Vector Vision</h1></div></div>
+    <div id="status" class="status">Starting camera...</div>
+  </header>
+  <section class="stats">
+    <div class="stat"><div class="stat-label">Objects tracked</div><div id="object-count" class="stat-value">0</div></div>
+    <div class="stat"><div class="stat-label">Pair distances</div><div id="pair-count" class="stat-value">0</div></div>
+    <div class="stat"><div class="stat-label">Stream FPS</div><div id="fps" class="stat-value">--</div></div>
+    <div class="stat"><div class="stat-label">Detector latency</div><div id="latency" class="stat-value">--</div></div>
+  </section>
+  <section class="layout">
+    <div class="panel">
+      <div class="panel-head"><h2>Live OpenCV frame</h2><span>YOLO / CANNY / DEPTH ESTIMATE</span></div>
+      <div class="video-wrap"><img id="video" src="/video" alt="Live camera stream"><div class="corner"></div><div class="legend"><span><i class="box"></i>detected</span><span><i class="link"></i>spatial link</span></div></div>
+    </div>
+    <div class="stack">
+      <aside class="cat-agent" aria-live="polite">
+        <div class="cat-avatar">🐱<span class="agent-wave"></span></div>
+        <div class="cat-bubble"><span class="cat-name">Mimi // vision copilot</span><span id="cat-message">Booting my tiny road brain...</span></div>
+        <button id="cat-voice" class="cat-voice" type="button">VOICE OFF</button>
+      </aside>
+      <div class="panel"><div class="panel-head"><h2>Object distances</h2><span>KNOWN WIDTH MODEL</span></div><div class="content" id="objects"><div class="empty">Waiting for detections...</div></div></div>
+      <div class="panel"><div class="panel-head"><h2>Between-object distance</h2><span>3D APPROXIMATION</span></div><div class="content" id="distances"><div class="empty">Waiting for object pairs...</div></div></div>
+    </div>
+  </section>
+</main>
+<script>
+  const status = document.getElementById('status');
+  const catMessage = document.getElementById('cat-message');
+  const catVoice = document.getElementById('cat-voice');
+  let voiceEnabled = false;
+  let lastMessage = '';
+  let lastObjectCount = 0;
+  catVoice.addEventListener('click', () => {
+    voiceEnabled = !voiceEnabled;
+    catVoice.textContent = voiceEnabled ? 'VOICE ON' : 'VOICE OFF';
+    catVoice.classList.toggle('active', voiceEnabled);
+    if (voiceEnabled) speak('Mimi online. I will call out what I see.');
+  });
+  function speak(message) {
+    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.rate = 1.08;
+    utterance.pitch = 1.35;
+    utterance.volume = .72;
+    window.speechSynthesis.speak(utterance);
+  }
+  function updateCat(state) {
+    let message = 'Scanning the road. My whiskers are online.';
+    if (state.status === 'loading model') message = 'Waking up my tiny object brain...';
+    else if (state.status === 'error') message = `I hit a snag: ${state.error}`;
+    else if (state.objects.length === 0) message = 'No known objects in view. Very suspicious.';
+    else if (state.distances.length > 0) {
+      const pair = state.distances[0];
+      message = `${pair.from} and ${pair.to} are about ${pair.meters.toFixed(2)} meters apart.`;
+    } else if (state.objects.length > lastObjectCount) {
+      message = `I see ${state.objects.length} object${state.objects.length === 1 ? '' : 's'} now. Stay alert.`;
+    } else if (state.objects.length === 1) {
+      const object = state.objects[0];
+      message = `${object.label} detected at ${object.distance_from_camera_m === null ? 'an unknown distance' : object.distance_from_camera_m.toFixed(2) + ' meters'}.`;
+    }
+    lastObjectCount = state.objects.length;
+    catMessage.textContent = message;
+    if (message !== lastMessage && (lastMessage === '' || state.distances.length > 0 || state.status === 'error')) speak(message);
+    lastMessage = message;
+  }
+  const escapeHtml = value => String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  async function refresh() {
+    try {
+      const response = await fetch('/api/state', {cache: 'no-store'});
+      const state = await response.json();
+      updateCat(state);
+      status.textContent = state.status;
+      status.className = state.status === 'error' ? 'status warning' : 'status';
+      if (state.error) status.textContent = `Error: ${state.error}`;
+      document.getElementById('object-count').textContent = state.objects.length;
+      document.getElementById('pair-count').textContent = state.distances.length;
+      document.getElementById('fps').textContent = state.fps ? state.fps.toFixed(1) : '--';
+      document.getElementById('latency').textContent = state.inference_ms ? state.inference_ms.toFixed(0) + ' ms' : '--';
+      document.getElementById('objects').innerHTML = state.objects.length ? `<table><tr><th>Object</th><th>Confidence</th><th>Camera distance</th></tr>${state.objects.map(o => `<tr><td>${escapeHtml(o.label)}</td><td>${Math.round(o.confidence * 100)}%</td><td>${o.distance_from_camera_m === null ? 'uncalibrated' : o.distance_from_camera_m.toFixed(2) + ' m'}</td></tr>`).join('')}</table>` : '<div class="empty">No objects detected.</div>';
+      document.getElementById('distances').innerHTML = state.distances.length ? state.distances.map(d => `<div class="pair"><span class="pair-name"><span class="link-dot"></span>${escapeHtml(d.from)} <span class="muted">to</span> ${escapeHtml(d.to)}</span><span class="pair-value">${d.meters.toFixed(2)} m</span></div>`).join('') : '<div class="empty">Need two known-size objects.</div>';
+    } catch (error) { status.textContent = 'Dashboard disconnected'; status.className = 'status warning'; }
+  }
+  refresh(); setInterval(refresh, 500);
+</script>
+</body>
+</html>
